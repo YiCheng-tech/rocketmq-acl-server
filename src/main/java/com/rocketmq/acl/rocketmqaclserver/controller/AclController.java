@@ -5,14 +5,12 @@ package com.rocketmq.acl.rocketmqaclserver.controller;
 import com.google.common.base.Preconditions;
 import com.rocketmq.acl.rocketmqaclserver.config.RMQConfigure;
 import com.rocketmq.acl.rocketmqaclserver.model.JsonResult;
-import com.rocketmq.acl.rocketmqaclserver.model.User;
-import com.rocketmq.acl.rocketmqaclserver.model.UserInfo;
 import com.rocketmq.acl.rocketmqaclserver.service.AclService;
-import com.rocketmq.acl.rocketmqaclserver.util.WebUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.AclConfig;
 import org.apache.rocketmq.common.PlainAccessConfig;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
@@ -33,12 +31,7 @@ public class AclController {
 
     @GetMapping("/config.query")
     public AclConfig getAclConfig(HttpServletRequest request) {
-        if (!configure.isLoginRequired()) {
-            return aclService.getAclConfig(false);
-        }
-        UserInfo userInfo = (UserInfo) WebUtil.getValueFromSession(request, WebUtil.USER_INFO);
-        // if user info is null but reach here, must exclude secret key for safety.
-        return aclService.getAclConfig(userInfo == null || userInfo.getUser().getType() != User.ADMIN);
+        return aclService.getAclConfig(false);
     }
 
     @PostMapping("/add.do")
