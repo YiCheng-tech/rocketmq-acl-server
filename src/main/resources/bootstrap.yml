@@ -14,13 +14,10 @@ rocketmq:
     listener: true
   name-server: 127.0.0.1:9876
 
-
-
 #(1)如果ACL与高可用部署(Master/Slave架构)同时启用，那么需要在Broker Master节点的distribution/conf/plain_acl.yml配置文件中
 #  设置全局白名单信息，即为将Slave节点的ip地址设置至Master节点plain_acl.yml配置文件的全局白名单中。
 #(2)如果ACL与高可用部署(多副本Dledger架构)同时启用，由于出现节点宕机时，Dledger Group组内会自动选主，那么就需要将Dledger Group组
 #   内所有Broker节点的plain_acl.yml配置文件的白名单设置所有Broker节点的ip地址。
-
   config:
     namesrvAddrs:
       - 127.0.0.1:9876
