@@ -24,17 +24,10 @@ import static org.apache.rocketmq.client.ClientConfig.SEND_MESSAGE_WITH_VIP_CHAN
 public class RMQConfigure {
 
     private Logger logger = LoggerFactory.getLogger(RMQConfigure.class);
-    //use rocketmq.namesrv.addr first,if it is empty,than use system proerty or system env
+
     private volatile String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY, System.getenv(MixAll.NAMESRV_ADDR_ENV));
 
     private volatile String isVIPChannel = System.getProperty(SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY, "true");
-
-
-    private String dataPath = "/tmp/rocketmq-console/data";
-
-    private boolean enableDashBoardCollect;
-
-    private boolean loginRequired = false;
 
     private String accessKey;
 
@@ -88,17 +81,6 @@ public class RMQConfigure {
         return !(StringUtils.isAnyBlank(this.accessKey, this.secretKey) ||
                  StringUtils.isAnyEmpty(this.accessKey, this.secretKey));
     }
-    public String getRocketMqDashboardDataPath() {
-        return dataPath;
-    }
-
-    public String getDashboardCollectData() {
-        return dataPath + File.separator + "dashboard";
-    }
-
-    public void setDataPath(String dataPath) {
-        this.dataPath = dataPath;
-    }
 
     public String getIsVIPChannel() {
         return isVIPChannel;
@@ -110,22 +92,6 @@ public class RMQConfigure {
             System.setProperty(SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY, isVIPChannel);
             logger.info("setIsVIPChannel isVIPChannel={}", isVIPChannel);
         }
-    }
-
-    public boolean isEnableDashBoardCollect() {
-        return enableDashBoardCollect;
-    }
-
-    public void setEnableDashBoardCollect(String enableDashBoardCollect) {
-        this.enableDashBoardCollect = Boolean.valueOf(enableDashBoardCollect);
-    }
-
-    public boolean isLoginRequired() {
-        return loginRequired;
-    }
-
-    public void setLoginRequired(boolean loginRequired) {
-        this.loginRequired = loginRequired;
     }
 
     public boolean isUseTLS() {
