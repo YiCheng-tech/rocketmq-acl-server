@@ -1,0 +1,65 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: rocketmqacl
+  main:
+    allow-bean-definition-overriding: true
+
+rocketmq:
+  producer:
+    group: demo_producer
+    send-message-timeout: 300000
+  consumer:
+    listener: true
+#  name-server: local-rocketmq.bthhotels.com
+  name-server: 127.0.0.1:9876
+
+
+
+#(1)如果ACL与高可用部署(Master/Slave架构)同时启用，那么需要在Broker Master节点的distribution/conf/plain_acl.yml配置文件中
+#  设置全局白名单信息，即为将Slave节点的ip地址设置至Master节点plain_acl.yml配置文件的全局白名单中。
+#(2)如果ACL与高可用部署(多副本Dledger架构)同时启用，由于出现节点宕机时，Dledger Group组内会自动选主，那么就需要将Dledger Group组
+#   内所有Broker节点的plain_acl.yml配置文件的白名单设置所有Broker节点的ip地址。
+
+  config:
+    # if this value is empty,use env value rocketmq.config.namesrvAddr  NAMESRV_ADDR | now, default localhost:9876
+    # configure multiple namesrv addresses to manage multiple different clusters
+    namesrvAddrs:
+      - 127.0.0.1:9876
+      - 127.0.0.2:9876
+    # if you use rocketmq version < 3.5.8, rocketmq.config.isVIPChannel should be false.default true
+    isVIPChannel:
+    # timeout for mqadminExt, default 5000ms
+    timeoutMillis:
+    # rocketmq-console's data path:dashboard/monitor
+    dataPath: /tmp/rocketmq-console/data
+    # set it false if you don't want use dashboard.default true
+    enableDashBoardCollect: true
+    # set the message track trace topic if you don't want use the default one
+    msgTrackTopicName:
+    ticketKey: ticket
+    # must create userInfo file: ${rocketmq.config.dataPath}/users.properties if the login is required
+    loginRequired: false
+    useTLS: false
+    # set the accessKey and secretKey if you used acl
+    accessKey: # if version > 4.4.0
+    secretKey: # if version > 4.4.0
+
+threadpool:
+  config:
+    coreSize: 10
+    maxSize: 10
+    keepAliveTime: 3000
+    queueSize: 5000
+
+
+
+
+
+
+
+
+
+
+
