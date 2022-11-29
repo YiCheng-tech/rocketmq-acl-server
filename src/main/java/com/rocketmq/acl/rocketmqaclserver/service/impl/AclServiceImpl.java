@@ -1,12 +1,10 @@
 package com.rocketmq.acl.rocketmqaclserver.service.impl;
 
 import com.google.common.base.Throwables;
-import com.rocketmq.acl.rocketmqaclserver.model.AclRequest;
 import com.rocketmq.acl.rocketmqaclserver.service.AbstractCommonService;
 import com.rocketmq.acl.rocketmqaclserver.service.AclService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.AclConfig;
@@ -23,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -125,185 +122,6 @@ public class AclServiceImpl extends AbstractCommonService implements AclService 
         }
     }
 
-    @Override
-    public void addOrUpdateAclTopicConfig(AclRequest request) {
-        try {
-            PlainAccessConfig addConfig = request.getConfig();
-            for (String addr : getBrokerAddrs()) {
-                AclConfig aclConfig = mqAdminExt.examineBrokerClusterAclConfig(addr);
-                PlainAccessConfig remoteConfig = null;
-                if (aclConfig.getPlainAccessConfigs() != null) {
-                    for (PlainAccessConfig config : aclConfig.getPlainAccessConfigs()) {
-                        if (config.getAccessKey().equals(addConfig.getAccessKey())) {
-                            remoteConfig = config;
-                            break;
-                        }
-                    }
-                }
-                if (remoteConfig == null) {
-                    // Maybe the broker no acl config of the access key, therefore add it;
-                    mqAdminExt.createAndUpdatePlainAccessConfig(addr, addConfig);
-                } else {
-                    if (remoteConfig.getTopicPerms() == null) {
-                        remoteConfig.setTopicPerms(new ArrayList<>());
-                    }
-                    removeExist(remoteConfig.getTopicPerms(), request.getTopicPerm().split("=")[0]);
-                    remoteConfig.getTopicPerms().add(request.getTopicPerm());
-                    mqAdminExt.createAndUpdatePlainAccessConfig(addr, remoteConfig);
-                }
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @Override
-    public void addOrUpdateAclGroupConfig(AclRequest request) {
-        try {
-            PlainAccessConfig addConfig = request.getConfig();
-            for (String addr : getBrokerAddrs()) {
-                AclConfig aclConfig = mqAdminExt.examineBrokerClusterAclConfig(addr);
-                PlainAccessConfig remoteConfig = null;
-                if (aclConfig.getPlainAccessConfigs() != null) {
-                    for (PlainAccessConfig config : aclConfig.getPlainAccessConfigs()) {
-                        if (config.getAccessKey().equals(addConfig.getAccessKey())) {
-                            remoteConfig = config;
-                            break;
-                        }
-                    }
-                }
-                if (remoteConfig == null) {
-                    // May be the broker no acl config of the access key, therefore add it;
-                    mqAdminExt.createAndUpdatePlainAccessConfig(addr, addConfig);
-                } else {
-                    if (remoteConfig.getGroupPerms() == null) {
-                        remoteConfig.setGroupPerms(new ArrayList<>());
-                    }
-                    removeExist(remoteConfig.getGroupPerms(), request.getGroupPerm().split("=")[0]);
-                    remoteConfig.getGroupPerms().add(request.getGroupPerm());
-                    mqAdminExt.createAndUpdatePlainAccessConfig(addr, remoteConfig);
-                }
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @Override
-    public void deletePermConfig(AclRequest request) {
-        try {
-            PlainAccessConfig deleteConfig = request.getConfig();
-
-            String topic = StringUtils.isNotEmpty(request.getTopicPerm()) ? request.getTopicPerm().split("=")[0] : null;
-            String group = StringUtils.isNotEmpty(request.getGroupPerm()) ? request.getGroupPerm().split("=")[0] : null;
-            if (deleteConfig.getTopicPerms() != null && topic != null) {
-                removeExist(deleteConfig.getTopicPerms(), topic);
-            }
-            if (deleteConfig.getGroupPerms() != null && group != null) {
-                removeExist(deleteConfig.getGroupPerms(), group);
-            }
-
-            for (String addr : getBrokerAddrs()) {
-                AclConfig aclConfig = mqAdminExt.examineBrokerClusterAclConfig(addr);
-                PlainAccessConfig remoteConfig = null;
-                if (aclConfig.getPlainAccessConfigs() != null) {
-                    for (PlainAccessConfig config : aclConfig.getPlainAccessConfigs()) {
-                        if (config.getAccessKey().equals(deleteConfig.getAccessKey())) {
-                            remoteConfig = config;
-                            break;
-                        }
-                    }
-                }
-                if (remoteConfig == null) {
-                    // Maybe the broker no acl config of the access key, therefore add it;
-                    mqAdminExt.createAndUpdatePlainAccessConfig(addr, deleteConfig);
-                } else {
-                    if (remoteConfig.getTopicPerms() != null && topic != null) {
-                        removeExist(remoteConfig.getTopicPerms(), topic);
-                    }
-                    if (remoteConfig.getGroupPerms() != null && group != null) {
-                        removeExist(remoteConfig.getGroupPerms(), group);
-                    }
-                    mqAdminExt.createAndUpdatePlainAccessConfig(addr, remoteConfig);
-                }
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-
-    }
-
-    @Override
-    public void syncData(PlainAccessConfig config) {
-        try {
-            for (String addr : getBrokerAddrs()) {
-                mqAdminExt.createAndUpdatePlainAccessConfig(addr, config);
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @Override
-    public void addWhiteList(List<String> whiteList) {
-        if (whiteList == null) {
-            return;
-        }
-        try {
-            for (String addr : getBrokerAddrs()) {
-                AclConfig aclConfig = mqAdminExt.examineBrokerClusterAclConfig(addr);
-                if (aclConfig.getGlobalWhiteAddrs() != null) {
-                    aclConfig.setGlobalWhiteAddrs(Stream.of(whiteList, aclConfig.getGlobalWhiteAddrs()).flatMap(Collection::stream).distinct().collect(Collectors.toList()));
-                } else {
-                    aclConfig.setGlobalWhiteAddrs(whiteList);
-                }
-                mqAdminExt.updateGlobalWhiteAddrConfig(addr, StringUtils.join(aclConfig.getGlobalWhiteAddrs(), ","));
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @Override
-    public void deleteWhiteAddr(String deleteAddr) {
-        try {
-            for (String addr : getBrokerAddrs()) {
-                AclConfig aclConfig = mqAdminExt.examineBrokerClusterAclConfig(addr);
-                if (aclConfig.getGlobalWhiteAddrs() == null || aclConfig.getGlobalWhiteAddrs().isEmpty()) {
-                    continue;
-                }
-                aclConfig.getGlobalWhiteAddrs().remove(deleteAddr);
-                mqAdminExt.updateGlobalWhiteAddrConfig(addr, StringUtils.join(aclConfig.getGlobalWhiteAddrs(), ","));
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @Override
-    public void synchronizeWhiteList(List<String> whiteList) {
-        if (whiteList == null) {
-            return;
-        }
-        try {
-            for (String addr : getBrokerAddrs()) {
-                mqAdminExt.updateGlobalWhiteAddrConfig(addr, StringUtils.join(whiteList, ","));
-            }
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    private void removeExist(List<String> list, String name) {
-        Iterator<String> iterator = list.iterator();
-        while (iterator.hasNext()) {
-            String v = iterator.next();
-            String cmp = v.split("=")[0];
-            if (cmp.equals(name)) {
-                iterator.remove();
-            }
-        }
-    }
 
     private boolean isExistAccessKey(String accessKey,
         String addr) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
