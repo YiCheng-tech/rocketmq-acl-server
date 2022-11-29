@@ -12,7 +12,6 @@ rocketmq:
     send-message-timeout: 300000
   consumer:
     listener: true
-#  name-server: local-rocketmq.bthhotels.com
   name-server: 127.0.0.1:9876
 
 
